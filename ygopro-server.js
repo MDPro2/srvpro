@@ -4934,7 +4934,7 @@
         });
       }
       Object.assign(openai_req_body, settings.modules.chatgpt.extra_opts);
-      axios.post(settings.modules.chatgpt.endpoint, openai_req_body, {
+      axios.post(`${settings.modules.chatgpt.endpoint}/v1/chat/completions`, openai_req_body, {
         timeout: 300000,
         headers: {
           Authorization: `Bearer ${settings.modules.chatgpt.token}`
