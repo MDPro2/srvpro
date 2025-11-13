@@ -512,7 +512,7 @@ loadLFList = (path) ->
     catch
   try
     log.info("Reading YGOPro version.")
-    cppversion = parseInt((await fs.promises.readFile(path.resolve(settings.modules.ygopro_path, 'gframe', 'game.cpp'), 'utf8')).match(/PRO_VERSION = ([x\dABCDEF]+)/)[1], '16')
+    cppversion = parseInt((await fs.promises.readFile(path.resolve(settings.modules.ygopro_path, 'gframe', 'config.h'), 'utf8')).match(/PRO_VERSION = ([x\dABCDEF]+)/)[1], '16')
     await setting_change(settings, "version", cppversion)
     log.info "ygopro version 0x"+settings.version.toString(16), "(from source code)"
   catch
@@ -853,11 +853,11 @@ ROOM_find_or_create_by_name = global.ROOM_find_or_create_by_name = (name, player
   uname=name.toUpperCase()
   if settings.modules.windbot.enabled and (uname[0...2] == 'AI' or (!settings.modules.random_duel.enabled and uname == ''))
     return ROOM_find_or_create_ai(name)
-  if settings.modules.random_duel.enabled and (uname == '' or uname == 'S' or uname == 'M' or uname == 'T' or uname == 'TOR' or uname == 'TR' or uname == 'OOR' or uname == 'OR' or uname == 'TOMR' or uname == 'TMR' or uname == 'OOMR' or uname == 'OMR' or uname == 'CR' or uname == 'CMR')
+  if settings.modules.random_duel.enabled and (uname == '' or uname == 'S' or uname == 'M' or uname == 'T' or uname == 'TOR' or uname == 'TR' or uname == 'OOR' or uname == 'OR' or uname == 'TOMR' or uname == 'TMR' or uname == 'OOMR' or uname == 'OMR' or uname == 'CR' or uname == 'CMR' or settings.modules.random_duel.extra_modes[uname] != undefined)
     return await ROOM_find_or_create_random(uname, player_ip)
   if room = ROOM_find_by_name(name)
     return room
-  else if memory_usage >= 95 or (settings.modules.max_rooms_count and rooms_count >= settings.modules.max_rooms_count)
+  else if memory_usage >= settings.modules.max_mem_percentage or (settings.modules.max_rooms_count and rooms_count >= settings.modules.max_rooms_count)
     return null
   else
     room = new Room(name)
@@ -911,8 +911,9 @@ ROOM_find_or_create_random = global.ROOM_find_or_create_random = (type, player_i
   else
     return null
   if result.random_type=='S' then result.welcome2 = '${random_duel_enter_room_single}'
-  if result.random_type=='M' then result.welcome2 = '${random_duel_enter_room_match}'
-  if result.random_type=='T' then result.welcome2 = '${random_duel_enter_room_tag}'
+  else if result.random_type=='M' then result.welcome2 = '${random_duel_enter_room_match}'
+  else if result.random_type=='T' then result.welcome2 = '${random_duel_enter_room_tag}'
+  else result.welcome2 = settings.modules.random_duel.extra_modes[type]?.welcome ? ''
   return result
 
 ROOM_find_or_create_ai = global.ROOM_find_or_create_ai = (name)->
@@ -3344,7 +3345,7 @@ ygopro.stoc_send_random_tip = (client)->
   if settings.modules.tips.split_zh and tips.tips_zh.length and client.lang == "zh-cn"
     tip_type = "tips_zh"
   if settings.modules.tips.enabled && tips.tips.length && !client.is_local && !client.closed
-    ygopro.stoc_send_chat(client, "Tip: " + tips[tip_type][Math.floor(Math.random() * tips[tip_type].length)])
+    ygopro.stoc_send_chat(client, settings.modules.tips.prefix + tips[tip_type][Math.floor(Math.random() * tips[tip_type].length)])
   await return
 ygopro.stoc_send_random_tip_to_room = (room)->
   if settings.modules.tips.enabled && tips.tips.length

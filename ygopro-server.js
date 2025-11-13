@@ -656,7 +656,7 @@
     }
     try {
       log.info("Reading YGOPro version.");
-      cppversion = parseInt(((await fs.promises.readFile(path.resolve(settings.modules.ygopro_path, 'gframe', 'game.cpp'), 'utf8'))).match(/PRO_VERSION = ([x\dABCDEF]+)/)[1], '16');
+      cppversion = parseInt(((await fs.promises.readFile(path.resolve(settings.modules.ygopro_path, 'gframe', 'config.h'), 'utf8'))).match(/PRO_VERSION = ([x\dABCDEF]+)/)[1], '16');
       await setting_change(settings, "version", cppversion);
       log.info("ygopro version 0x" + settings.version.toString(16), "(from source code)");
     } catch (error1) {
@@ -1095,12 +1095,12 @@
     if (settings.modules.windbot.enabled && (uname.slice(0, 2) === 'AI' || (!settings.modules.random_duel.enabled && uname === ''))) {
       return ROOM_find_or_create_ai(name);
     }
-    if (settings.modules.random_duel.enabled && (uname === '' || uname === 'S' || uname === 'M' || uname === 'T' || uname === 'TOR' || uname === 'TR' || uname === 'OOR' || uname === 'OR' || uname === 'TOMR' || uname === 'TMR' || uname === 'OOMR' || uname === 'OMR' || uname === 'CR' || uname === 'CMR')) {
+    if (settings.modules.random_duel.enabled && (uname === '' || uname === 'S' || uname === 'M' || uname === 'T' || uname === 'TOR' || uname === 'TR' || uname === 'OOR' || uname === 'OR' || uname === 'TOMR' || uname === 'TMR' || uname === 'OOMR' || uname === 'OMR' || uname === 'CR' || uname === 'CMR' || settings.modules.random_duel.extra_modes[uname] !== void 0)) {
       return (await ROOM_find_or_create_random(uname, player_ip));
     }
     if (room = ROOM_find_by_name(name)) {
       return room;
-    } else if (memory_usage >= 95 || (settings.modules.max_rooms_count && rooms_count >= settings.modules.max_rooms_count)) {
+    } else if (memory_usage >= settings.modules.max_mem_percentage || (settings.modules.max_rooms_count && rooms_count >= settings.modules.max_rooms_count)) {
       return null;
     } else {
       room = new Room(name);
@@ -1117,7 +1117,7 @@
   };
 
   ROOM_find_or_create_random = global.ROOM_find_or_create_random = async function(type, player_ip) {
-    var max_player, name, playerbanned, randomDuelBanRecord, result;
+    var max_player, name, playerbanned, randomDuelBanRecord, ref, ref1, result;
     if (settings.modules.mysql.enabled) {
       randomDuelBanRecord = (await dataManager.getRandomDuelBan(player_ip));
       if (randomDuelBanRecord) {
@@ -1167,12 +1167,12 @@
     }
     if (result.random_type === 'S') {
       result.welcome2 = '${random_duel_enter_room_single}';
-    }
-    if (result.random_type === 'M') {
+    } else if (result.random_type === 'M') {
       result.welcome2 = '${random_duel_enter_room_match}';
-    }
-    if (result.random_type === 'T') {
+    } else if (result.random_type === 'T') {
       result.welcome2 = '${random_duel_enter_room_tag}';
+    } else {
+      result.welcome2 = (ref = (ref1 = settings.modules.random_duel.extra_modes[type]) != null ? ref1.welcome : void 0) != null ? ref : '';
     }
     return result;
   };
@@ -4430,7 +4430,7 @@
       tip_type = "tips_zh";
     }
     if (settings.modules.tips.enabled && tips.tips.length && !client.is_local && !client.closed) {
-      ygopro.stoc_send_chat(client, "Tip: " + tips[tip_type][Math.floor(Math.random() * tips[tip_type].length)]);
+      ygopro.stoc_send_chat(client, settings.modules.tips.prefix + tips[tip_type][Math.floor(Math.random() * tips[tip_type].length)]);
     }
   };
 
