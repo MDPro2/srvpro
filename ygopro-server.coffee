@@ -4331,7 +4331,7 @@ if true
         response.end(addCallback(u.query.callback, duellog))
 
     else if u.pathname == '/api/getkeys' and settings.modules.vip.enabled
-      if !auth.auth(u.query.username, u.query.pass, "vip", "get_keys")
+      if !await auth.auth(u.query.username, u.query.pass, "vip", "get_keys")
         response.writeHead(200)
         response.end(addCallback(u.query.callback, "Unauthorized."))
         return
@@ -4557,7 +4557,7 @@ if true
         
 
       else if u.query.generatekey and settings.modules.vip.enabled
-        if !auth.auth(u.query.username, u.query.pass, "vip", "generate_keys")
+        if !await auth.auth(u.query.username, u.query.pass, "vip", "generate_keys")
           response.writeHead(200)
           response.end(addCallback(u.query.callback, "['密码错误', 0]"))
           return
