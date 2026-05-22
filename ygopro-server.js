@@ -2284,6 +2284,9 @@
           form_data.append('userdeckBHistory', JSON.stringify(score_array[1].deck_history));
         }
         form_data.append('first', JSON.stringify(this.first_list));
+        if (this.wins) {
+          form_data.append('wins', JSON.stringify(this.wins));
+        }
         form_data.append('replays', JSON.stringify(formatted_replays));
         form_data.append('start', this.start_time);
         form_data.append('end', end_time);
@@ -3994,6 +3997,10 @@
         room.winner_name = room.dueling_players[pos].name_vpass;
         //log.info room.dueling_players, pos
         room.scores[room.winner_name] = room.scores[room.winner_name] + 1;
+        if (!room.wins) {
+          room.wins = [];
+        }
+        room.wins.push(room.winner_name);
         if (room.match_kill) {
           room.match_kill = false;
           room.scores[room.winner_name] = 99;
@@ -4012,6 +4019,11 @@
             break;
           }
         }
+      } else if (room && !room.finished && pos === 2) {
+        if (!room.wins) {
+          room.wins = [];
+        }
+        room.wins.push('');
       }
       if (room.death) {
         if (settings.modules.http.quick_death_rule === 1 || settings.modules.http.quick_death_rule === 3) {
@@ -5818,7 +5830,7 @@
           response.end(addCallback(u.query.callback, duellog));
         }
       } else if (u.pathname === '/api/getkeys' && settings.modules.vip.enabled) {
-        if (!auth.auth(u.query.username, u.query.pass, "vip", "get_keys")) {
+        if (!(await auth.auth(u.query.username, u.query.pass, "vip", "get_keys"))) {
           response.writeHead(200);
           response.end(addCallback(u.query.callback, "Unauthorized."));
           return;
@@ -6093,7 +6105,7 @@
             return process.exit();
           });
         } else if (u.query.generatekey && settings.modules.vip.enabled) {
-          if (!auth.auth(u.query.username, u.query.pass, "vip", "generate_keys")) {
+          if (!(await auth.auth(u.query.username, u.query.pass, "vip", "generate_keys"))) {
             response.writeHead(200);
             response.end(addCallback(u.query.callback, "['密码错误', 0]"));
             return;
